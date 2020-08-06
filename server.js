@@ -62,7 +62,7 @@ function generateSimilar(plateNumber) {
     else regex += character;
   }
 
-  return new RegExp(regex);
+  return new RegExp(regex, 'gi');
 }
 
 async function storeImage(plate, data) {
@@ -82,11 +82,13 @@ async function storeImage(plate, data) {
 }
 
 function fuzzySearch(plate) {
+  let match = false;
+  const similar = generateSimilar(plate);
   WANTED_PLATES.forEach(wanted => {
-    if (wanted.match(generateSimilar(plate)))
-      return true;
+    if (similar.test(wanted))
+      match = true;
   });
-  return false;
+  return match;
 }
 
 async function sendLicensePlates(message) {
@@ -145,5 +147,5 @@ async function onError(error) {
 
 // RUN
 main().catch((err) => {
-  console.log("Error occurred: ", err);
+  onError(err);
 });
