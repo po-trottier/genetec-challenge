@@ -5,15 +5,29 @@ const fs = require('fs');
 
 // CONSTANTS
 const PLATE_SIMILARITY_DICTIONARY = {
-  B: [ 'B', '8' ],
-  C: [ 'C', 'G' ],
-  E: [ 'E', 'F' ],
-  K: [ 'K', 'X', 'Y' ],
-  I: [ 'I', '1', 'T', 'J' ],
-  S: [ 'S', '5' ],
-  O: [ 'O', 'D', 'Q', '0' ],
-  P: [ 'P', 'R' ],
-  Z: [ 'Z', '2' ]
+  "B": [ 'B', '8' ],
+  "8": [ 'B', '8' ],
+  "C": [ 'C', 'G' ],
+  "G": [ 'C', 'G' ],
+  "E": [ 'E', 'F' ],
+  "F": [ 'E', 'F' ],
+  "K": [ 'K', 'X', 'Y' ],
+  "X": [ 'K', 'X', 'Y' ],
+  "Y": [ 'K', 'X', 'Y' ],
+  "I": [ 'I', '1', 'T', 'J' ],
+  "1": [ 'I', '1', 'T', 'J' ],
+  "T": [ 'I', '1', 'T', 'J' ],
+  "J": [ 'I', '1', 'T', 'J' ],
+  "S": [ 'S', '5' ],
+  "5": [ 'S', '5' ],
+  "O": [ 'O', 'D', 'Q', '0' ],
+  "D": [ 'O', 'D', 'Q', '0' ],
+  "Q": [ 'O', 'D', 'Q', '0' ],
+  "0": [ 'O', 'D', 'Q', '0' ],
+  "P": [ 'P', 'R' ],
+  "R": [ 'P', 'R' ],
+  "Z": [ 'Z', '2' ],
+  "2": [ 'Z', '2' ]
 }
 
 const platesEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=ConsumeReads;SharedAccessKey=VNcJZVQAVMazTAfrssP6Irzlg/pKwbwfnOqMXqROtCQ=";
@@ -27,6 +41,9 @@ const wantedSubscriptionKey = "lljogbgtkpoozqvj";
 const account  = "contextimagereferences";
 const accountKey = "/ki/v3fcxbtN9XPzlBe3yNybCZQRONQOm7hMqLx7GKxPyRZa/t+fW+y8kjOWzIGrenDwo52eeAOdrPk+BQpv4Q==";
 const containerName = "contextimages";
+
+const cognitiveEndpoint = "https://cognitive-service.cognitiveservices.azure.com";
+const cognitiveKey = "adb148f2cfb849c3b1b332e2025c40d9";
 
 const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
 const blobServiceClient  = new BlobServiceClient(
@@ -82,20 +99,43 @@ async function storeImage(plate, data) {
 }
 
 function fuzzySearch(plate) {
-  let match = false;
+  let match = null;
   const similar = generateSimilar(plate);
   WANTED_PLATES.forEach(wanted => {
-    if (similar.test(wanted))
-      match = true;
+    if (wanted.match(similar))
+      match = wanted;
   });
   return match;
+}
+
+async function testCognitive(plate) {
+  const url = await storeImage('license_' + plate.LicensePlate, plate.LicensePlateImageJpg)
+  const response = await axios.post(
+    cognitiveEndpoint + '/vision/v2.0/recognizeText?mode=Printed',
+    { url: url }, 
+    {
+      headers: {
+        'Content-Type': 'application/json', 
+        'Ocp-Apim-Subscription-Key': cognitiveKey 
+      }
+    });
+  const getUrl = response.headers['operation-location'];
+  const { data } = await axios.get(getUrl, {
+    headers: {
+      'Ocp-Apim-Subscription-Key': cognitiveKey 
+    }
+  });
+  console.log(data);
 }
 
 async function sendLicensePlates(message) {
   const plate = message.body;
 
+  testCognitive(plate)
+
   // FILTER FOUND PLATES WITH WANTED PLATES
-  if(!fuzzySearch(plate.LicensePlate)) {
+  const fuzzy = fuzzySearch(plate.LicensePlate);
+  if(!fuzzy) {
     console.log(plate.LicensePlate + ' is not Wanted...');
     return;
   }
@@ -106,14 +146,14 @@ async function sendLicensePlates(message) {
   // SEND THE WANTED PLATES
   let payload = {
     LicensePlateCaptureTime : plate.LicensePlateCaptureTime,
-    LicensePlate            : plate.LicensePlate,
+    LicensePlate            : fuzzy,
     Latitude                : plate.Latitude,
     Longitude               : plate.Longitude,
     ContextImageReference   : blobURI
   }
 
   // SEND THE REQUEST
-  console.log('FOUND WANTED: ' + payload.LicensePlate);
+  console.log('FOUND WANTED: ' + fuzzy);
   const response = await axios.post(
     'https://licenseplatevalidator.azurewebsites.net/api/lpr/platelocation', 
     payload,
