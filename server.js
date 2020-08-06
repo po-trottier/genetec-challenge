@@ -1,13 +1,13 @@
 const { ServiceBusClient, ReceiveMode } = require("@azure/service-bus"); 
 
 // Define connection string and related Service Bus entity names here
-const connectionString = "";
-const topicName = ""; 
-const subscriptionName = ""; 
+const endpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=ConsumeReads;SharedAccessKey=VNcJZVQAVMazTAfrssP6Irzlg/pKwbwfnOqMXqROtCQ=";
+const topicName = "licenseplateread"; 
+const subscriptionKey = "lljogbgtkpoozqvj"; 
 
 async function main(){
-  const sbClient = ServiceBusClient.createFromConnectionString(connectionString); 
-  const subscriptionClient = sbClient.createSubscriptionClient(topicName, subscriptionName);
+  const sbClient = ServiceBusClient.createFromConnectionString(endpoint); 
+  const subscriptionClient = sbClient.createSubscriptionClient(topicName, subscriptionKey);
   const receiver = subscriptionClient.createReceiver(ReceiveMode.receiveAndDelete);
 
   try {
