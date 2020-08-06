@@ -45,6 +45,30 @@ async function main() {
   wantedReceiver.registerMessageHandler(getWanted, onError);
 }
 
+
+const PLATE_SIMILARITY_DICTIONARY = {
+  B: [ 'B', '8' ],
+  C: [ 'C', 'G' ],
+  E: [ 'E', 'F' ],
+  K: [ 'K', 'X', 'Y' ],
+  I: [ 'I', '1', 'T', 'J' ],
+  S: [ 'S', '5' ],
+  O: [ 'O', 'D', 'Q', '0' ],
+  P: [ 'P', 'R' ],
+  Z: [ 'Z', '2' ]
+}
+
+function generateSimilarPlateNumbersRegex(plateNumber) {
+  let regex = "";
+
+  for(const character of plateNumber) {
+    if(character in PLATE_SIMILARITY_DICTIONARY) regex += `[${PLATE_SIMILARITY_DICTIONARY[character].join('-')}]`;
+    else regex += character;
+  }
+
+  return regex;
+}
+
 async function storeImage(plate, data) {
   const containerClient = blobServiceClient.getContainerClient(containerName);
  
