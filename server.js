@@ -13,7 +13,7 @@ async function main(){
   const receiver = subscriptionClient.createReceiver(ReceiveMode.receiveAndDelete);
 
   try {
-    const messages = await receiver.receiveMessages(10);
+    const messages = await receiver.receiveMessages(1);
 
     const plates = messages.map(message => message.body);
 
@@ -31,9 +31,8 @@ async function main(){
         'https://licenseplatevalidator.azurewebsites.net/api/lpr/platelocation', 
         payload,
         {
-          auth: {
-            username: 'team02',
-            password: ']))XiyRbLKT=)ds!'
+          headers: {
+            Authorization: 'Basic dGVhbTAyOl0pKVhpeVJiTEtUPSlkcyE=' 
           }
         }
       );
@@ -41,6 +40,7 @@ async function main(){
 
       // GET WANTED PLATES
       // THIS COSTS MONEY !!!
+      // DATA IN WANTED.JSON
       // let plates = await axios.get('https://licenseplatevalidator.azurewebsites.net/api/lpr/wantedplates', {
       //   auth: {
       //     username: 'team02',
