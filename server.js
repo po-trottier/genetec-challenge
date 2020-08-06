@@ -29,7 +29,7 @@ async function main(){
       // SEND THE REQUEST
       const response = await axios.post(
         'https://licenseplatevalidator.azurewebsites.net/api/lpr/platelocation', 
-        body,
+        payload,
         {
           auth: {
             username: 'team02',
