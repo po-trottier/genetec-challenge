@@ -13,21 +13,18 @@ async function main(){
   const receiver = subscriptionClient.createReceiver(ReceiveMode.receiveAndDelete);
 
   try {
-    // GET MESSAGES
     const messages = await receiver.receiveMessages(10);
-    const array = messages.map(message => JSON.stringify(message.body));
 
-    // POST THE MESSAGES TO THE API
-    for (let i = 0; i < array.length; i++) {
-      // FORMAT THE BODY
-      const obj = JSON.parse(array[i]);
-      const body = {
-        LicensePlateCaptureTime: obj.LicensePlateCaptureTime,
-        LicensePlate: obj.LicensePlate,
-        Latitude: obj.Latitude,
-        Longitude: obj.Longitude,
-      };
-      console.log(body);
+    const plates = messages.map(message => message.body);
+
+    for(const plate of plates) {
+      let payload = {
+        LicensePlateCaptureTime : plate.LicensePlateCaptureTime,
+        LicensePlate            : plate.LicensePlate,
+        Latitude                : plate.Latitude,
+        Longitude               : plate.Longitude
+      }
+      console.log(payload);
 
       // SEND THE REQUEST
       const response = await axios.post(
