@@ -7,16 +7,19 @@ const topicName = "licenseplateread";
 const subscriptionKey = "lljogbgtkpoozqvj"; 
 
 async function main(){
+  // SETUP
   const sbClient = ServiceBusClient.createFromConnectionString(endpoint); 
   const subscriptionClient = sbClient.createSubscriptionClient(topicName, subscriptionKey);
   const receiver = subscriptionClient.createReceiver(ReceiveMode.receiveAndDelete);
 
   try {
-    const messages = await receiver.receiveMessages(1);
-  
+    // GET MESSAGES
+    const messages = await receiver.receiveMessages(10);
     const array = messages.map(message => JSON.stringify(message.body));
 
+    // POST THE MESSAGES TO THE API
     for (let i = 0; i < array.length; i++) {
+      // FORMAT THE BODY
       const obj = JSON.parse(array[i]);
       const body = {
         LicensePlateCaptureTime: obj.LicensePlateCaptureTime,
@@ -24,21 +27,34 @@ async function main(){
         Latitude: obj.Latitude,
         Longitude: obj.Longitude,
       };
-
       console.log(body);
 
-      // const response = await axios.post(
-      //   'https://licenseplatevalidator.azurewebsites.net/api/lpr/platelocation', 
-      //   body,
-      //   {
-      //     auth: {
-      //       username: 'team02',
-      //       password: ']))XiyRbLKT=)ds!'
-      //     }
-      //   }
-      // );
+      // SEND THE REQUEST
+      const response = await axios.post(
+        'https://licenseplatevalidator.azurewebsites.net/api/lpr/platelocation', 
+        body,
+        {
+          auth: {
+            username: 'team02',
+            password: ']))XiyRbLKT=)ds!'
+          }
+        }
+      );
+      console.log(response);
 
-      // console.log(response);
+      // GET WANTED PLATES
+      let plates = await axios.get('https://licenseplatevalidator.azurewebsites.net/api/lpr/wantedplates', {
+        auth: {
+          username: 'team02',
+          password: ']))XiyRbLKT=)ds!'
+        }
+      });
+      plates = plates.data;
+      console.log(plates);
+
+      // FILTER FOUND PLATES WITH WANTED PLATES
+      const filtered = array.filter(item => plates.includes(item.LicensePlate))
+      console.log(filtered);
     }
 
     await subscriptionClient.close();
