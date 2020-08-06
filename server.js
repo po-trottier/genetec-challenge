@@ -20,15 +20,8 @@ async function main() {
   const wantedSubscription = wantedClient.createSubscriptionClient(wantedTopicName, wantedSubscriptionKey);
   const wantedReceiver = wantedSubscription.createReceiver(ReceiveMode.receiveAndDelete);
 
-  try {
-    platesReceiver.registerMessageHandler(sendLicensePlates, onError);    
-    wantedReceiver.registerMessageHandler(getWanted, onError);
-    await platesSubscription.close();
-    await wantedSubscription.close();
-  } finally {
-    await platesClient.close();
-    await wantedClient.close();
-  }
+  platesReceiver.registerMessageHandler(sendLicensePlates, onError);    
+  wantedReceiver.registerMessageHandler(getWanted, onError);
 }
 
 async function sendLicensePlates(message) {
@@ -36,11 +29,12 @@ async function sendLicensePlates(message) {
 
   // GET LOCAL WANTED PLATES
   const wanted = JSON.parse(fs.readFileSync('./data/wanted.json'));
-  console.log(wanted);
 
   // FILTER FOUND PLATES WITH WANTED PLATES
-  if(!wanted.includes(plate.LicensePlate))
+  if(!wanted.includes(plate.LicensePlate)) {
+    console.log(plate.LicensePlate + ' is not Wanted...');
     return;
+  }
 
   // SEND THE WANTED PLATES
   let payload = {
