@@ -43,9 +43,9 @@ async function sendLicensePlates(message) {
     Latitude                : plate.Latitude,
     Longitude               : plate.Longitude
   }
-  console.log(payload);
   
   // SEND THE REQUEST
+  console.log('FOUND WANTED: ' + payload.LicensePlate);
   const response = await axios.post(
     'https://licenseplatevalidator.azurewebsites.net/api/lpr/platelocation', 
     payload,
@@ -59,6 +59,7 @@ async function sendLicensePlates(message) {
 }
 
 async function getWanted(message) {
+  console.log('NEW WANTED LIST');
   // GET WANTED PLATES
   // THIS COSTS MONEY !!!
   // DATA IN WANTED.JSON
