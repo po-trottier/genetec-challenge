@@ -1,9 +1,12 @@
 const { ServiceBusClient, ReceiveMode } = require("@azure/service-bus"); 
 const { BlobServiceClient, StorageSharedKeyCredential } = require("@azure/storage-blob");
 const axios = require('axios');
+const didYouMean = require('didyoumean2').default;
 const fs = require('fs');
 
 // CONSTANTS
+const DID_YOU_MEAN_THRESHOLD = 0.8;
+
 const platesEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=ConsumeReads;SharedAccessKey=VNcJZVQAVMazTAfrssP6Irzlg/pKwbwfnOqMXqROtCQ=";
 const platesTopicName = "licenseplateread"; 
 const platesSubscriptionKey = "lljogbgtkpoozqvj"; 
@@ -45,21 +48,31 @@ async function main() {
 async function storeImage(plate, data) {
   const containerClient = blobServiceClient.getContainerClient(containerName);
  
-  const content = data;
-  const blobName = plate;
+  filename = plate + '.jpg'
+
+  const content = new Buffer(data, 'base64');
+  const blobName = filename;
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  const uploadBlobResponse = await blockBlobClient.upload(content, content.length);
+  
+  await blockBlobClient.upload(content, content.length);
 
   console.log("Image Upload Successful");
   
-  return "https://contextimagereferences.blob.core.windows.net/contextimages/" + plate
+  return "https://contextimagereferences.blob.core.windows.net/contextimages/" + filename
+}
+
+function fuzzySearch(plate) {
+  const result = didYouMean(plate, WANTED_PLATES, {
+    threshold: DID_YOU_MEAN_THRESHOLD
+  });
+  return !result ? false : result.length > 0;
 }
 
 async function sendLicensePlates(message) {
   const plate = message.body;
-  
+
   // FILTER FOUND PLATES WITH WANTED PLATES
-  if(!WANTED_PLATES.includes(plate.LicensePlate)) {
+  if(!fuzzySearch(plate.LicensePlate)) {
     console.log(plate.LicensePlate + ' is not Wanted...');
     return;
   }
@@ -75,7 +88,7 @@ async function sendLicensePlates(message) {
     Longitude               : plate.Longitude,
     ContextImageReference   : blobURI
   }
-  
+
   // SEND THE REQUEST
   console.log('FOUND WANTED: ' + payload.LicensePlate);
   const response = await axios.post(
