@@ -1,4 +1,6 @@
 const { ServiceBusClient, ReceiveMode } = require("@azure/service-bus"); 
+const axios = require('axios');
+const fs = require('fs');
 
 // Define connection string and related Service Bus entity names here
 const endpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=ConsumeReads;SharedAccessKey=VNcJZVQAVMazTAfrssP6Irzlg/pKwbwfnOqMXqROtCQ=";
@@ -12,8 +14,8 @@ async function main(){
 
   try {
     const messages = await receiver.receiveMessages(10);
-    console.log("Received messages:");
-    console.log(messages.map(message => message.body));
+    
+    fs.writeFileSync('./data/response.json', messages.map(message => JSON.stringify(message.body)));
 
     await subscriptionClient.close();
   } finally {
