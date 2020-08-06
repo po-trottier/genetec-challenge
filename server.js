@@ -18,40 +18,44 @@ async function main() {
     const messages = await receiver.receiveMessages(50);
     const plates = messages.map(message => message.body);
 
-    // GET LOCAL WANTED PLATES
-    const wanted = JSON.parse(fs.readFileSync('./data/wanted.json'));
-    console.log(wanted);
-
-    // FILTER FOUND PLATES WITH WANTED PLATES
-    const filtered = plates.filter(plate => wanted.includes(plate.LicensePlate));
-    console.log(filtered.map(item => item.LicensePlate));
-
-    // SEND THE WANTED PLATES
-    for(const plate of filtered) {
-      let payload = {
-        LicensePlateCaptureTime : plate.LicensePlateCaptureTime,
-        LicensePlate            : plate.LicensePlate,
-        Latitude                : plate.Latitude,
-        Longitude               : plate.Longitude
-      }
-      console.log(payload);
+    sendLicensePlates(plates);
     
-      // SEND THE REQUEST
-      const response = await axios.post(
-        'https://licenseplatevalidator.azurewebsites.net/api/lpr/platelocation', 
-        payload,
-        {
-          headers: {
-            Authorization: 'Basic dGVhbTAyOl0pKVhpeVJiTEtUPSlkcyE=' 
-          }
-        }
-      );
-      console.log(response.data);
-    }
-
     await subscriptionClient.close();
   } finally {
     await sbClient.close();
+  }
+}
+
+async function sendLicensePlates(plates) {
+  // GET LOCAL WANTED PLATES
+  const wanted = JSON.parse(fs.readFileSync('./data/wanted.json'));
+  console.log(wanted);
+
+  // FILTER FOUND PLATES WITH WANTED PLATES
+  const filtered = plates.filter(plate => wanted.includes(plate.LicensePlate));
+  console.log(filtered.map(item => item.LicensePlate));
+
+  // SEND THE WANTED PLATES
+  for(const plate of filtered) {
+    let payload = {
+      LicensePlateCaptureTime : plate.LicensePlateCaptureTime,
+      LicensePlate            : plate.LicensePlate,
+      Latitude                : plate.Latitude,
+      Longitude               : plate.Longitude
+    }
+    console.log(payload);
+  
+    // SEND THE REQUEST
+    const response = await axios.post(
+      'https://licenseplatevalidator.azurewebsites.net/api/lpr/platelocation', 
+      payload,
+      {
+        headers: {
+          Authorization: 'Basic dGVhbTAyOl0pKVhpeVJiTEtUPSlkcyE=' 
+        }
+      }
+    );
+    console.log(response.data);
   }
 }
 
