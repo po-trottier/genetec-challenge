@@ -37,7 +37,7 @@ async function main(){
           }
         }
       );
-      console.log(response);
+      console.log(`Sent plate data to platform, request status: ${response.status} (${response.statusText})`);
 
       // GET WANTED PLATES
       // THIS COSTS MONEY !!!
