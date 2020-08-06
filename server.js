@@ -10,6 +10,9 @@ const wantedEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.n
 const wantedTopicName = "wantedplatelistupdate"; 
 const wantedSubscriptionKey = "lljogbgtkpoozqvj"; 
 
+// GLOBALS
+let WANTED_PLATES= [];
+
 async function main() {
   // SETUP
   const platesClient = ServiceBusClient.createFromConnectionString(platesEndpoint); 
@@ -20,6 +23,8 @@ async function main() {
   const wantedSubscription = wantedClient.createSubscriptionClient(wantedTopicName, wantedSubscriptionKey);
   const wantedReceiver = wantedSubscription.createReceiver(ReceiveMode.receiveAndDelete);
 
+  WANTED_PLATES = fs.readFileSync('./data/wanted.json');
+
   platesReceiver.registerMessageHandler(sendLicensePlates, onError);    
   wantedReceiver.registerMessageHandler(getWanted, onError);
 }
@@ -27,11 +32,8 @@ async function main() {
 async function sendLicensePlates(message) {
   const plate = message.body;
 
-  // GET LOCAL WANTED PLATES
-  const wanted = JSON.parse(fs.readFileSync('./data/wanted.json'));
-
   // FILTER FOUND PLATES WITH WANTED PLATES
-  if(!wanted.includes(plate.LicensePlate)) {
+  if(!WANTED_PLATES.includes(plate.LicensePlate)) {
     console.log(plate.LicensePlate + ' is not Wanted...');
     return;
   }
@@ -69,6 +71,7 @@ async function getWanted(message) {
       password: ']))XiyRbLKT=)ds!'
     }
   });
+  WANTED_PLATES = plates.data
   fs.writeFileSync('./data/wanted.json', plates.data);
 }
 
