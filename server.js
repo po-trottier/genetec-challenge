@@ -40,18 +40,19 @@ async function main(){
       console.log(response);
 
       // GET WANTED PLATES
-      let plates = await axios.get('https://licenseplatevalidator.azurewebsites.net/api/lpr/wantedplates', {
-        auth: {
-          username: 'team02',
-          password: ']))XiyRbLKT=)ds!'
-        }
-      });
-      plates = plates.data;
-      console.log(plates);
+      // THIS COSTS MONEY !!!
+      // let plates = await axios.get('https://licenseplatevalidator.azurewebsites.net/api/lpr/wantedplates', {
+      //   auth: {
+      //     username: 'team02',
+      //     password: ']))XiyRbLKT=)ds!'
+      //   }
+      // });
+      // plates = plates.data;
+      // console.log(plates);
 
       // FILTER FOUND PLATES WITH WANTED PLATES
-      const filtered = array.filter(item => plates.includes(item.LicensePlate))
-      console.log(filtered);
+      // const filtered = array.filter(item => plates.includes(item.LicensePlate))
+      // console.log(filtered);
     }
 
     await subscriptionClient.close();
