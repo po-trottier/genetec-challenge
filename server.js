@@ -2,6 +2,8 @@ const { ServiceBusClient, ReceiveMode } = require("@azure/service-bus");
 const axios = require('axios');
 const fs = require('fs');
 
+const AzureStorageBlob = require("@azure/storage-blob");
+
 // CONSTANTS
 const platesEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=ConsumeReads;SharedAccessKey=VNcJZVQAVMazTAfrssP6Irzlg/pKwbwfnOqMXqROtCQ=";
 const platesTopicName = "licenseplateread"; 
@@ -9,6 +11,13 @@ const platesSubscriptionKey = "lljogbgtkpoozqvj";
 const wantedEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=listeneronly;SharedAccessKey=w+ifeMSBq1AQkedLCpMa8ut5c6bJzJxqHuX9Jx2XGOk=";
 const wantedTopicName = "wantedplatelistupdate"; 
 const wantedSubscriptionKey = "lljogbgtkpoozqvj"; 
+
+const STORAGE_BLOB_ACCOUNT = "contextimagereferences";
+const DEFAULT_AZURE_CREDENTIAL = new DefaultAzureCredential();
+const STORAGE_BLOB_SERVICE_CLIENT = new BlobServiceClient(
+  `https://${STORAGE_BLOB_ACCOUNT}.blob.core.windows.net`,
+  DEFAULT_AZURE_CREDENTIAL
+);
 
 // GLOBALS
 let WANTED_PLATES= [];
@@ -29,11 +38,17 @@ async function main() {
   wantedReceiver.registerMessageHandler(getWanted, onError);
 }
 
+function storeImage(storageName, imageData) {
+  
+}
+
 async function sendLicensePlates(message) {
   const plate = message.body;
 
+  console.log(Object.keys(plate));
+
   // FILTER FOUND PLATES WITH WANTED PLATES
-  if(!WANTED_PLATES.includes(plate.LicensePlate)) {
+  /*if(!WANTED_PLATES.includes(plate.LicensePlate)) {
     console.log(plate.LicensePlate + ' is not Wanted...');
     return;
   }
@@ -57,7 +72,7 @@ async function sendLicensePlates(message) {
       }
     }
   );
-  console.log(response.data);
+  console.log(response.data);*/
 }
 
 async function getWanted(message) {
