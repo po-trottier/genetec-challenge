@@ -5,7 +5,17 @@ const didYouMean = require('didyoumean2').default;
 const fs = require('fs');
 
 // CONSTANTS
-const DID_YOU_MEAN_THRESHOLD = 0.8;
+const PLATE_SIMILARITY_DICTIONARY = {
+  B: [ 'B', '8' ],
+  C: [ 'C', 'G' ],
+  E: [ 'E', 'F' ],
+  K: [ 'K', 'X', 'Y' ],
+  I: [ 'I', '1', 'T', 'J' ],
+  S: [ 'S', '5' ],
+  O: [ 'O', 'D', 'Q', '0' ],
+  P: [ 'P', 'R' ],
+  Z: [ 'Z', '2' ]
+}
 
 const platesEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=ConsumeReads;SharedAccessKey=VNcJZVQAVMazTAfrssP6Irzlg/pKwbwfnOqMXqROtCQ=";
 const platesTopicName = "licenseplateread"; 
@@ -45,24 +55,11 @@ async function main() {
   wantedReceiver.registerMessageHandler(getWanted, onError);
 }
 
-
-const PLATE_SIMILARITY_DICTIONARY = {
-  B: [ 'B', '8' ],
-  C: [ 'C', 'G' ],
-  E: [ 'E', 'F' ],
-  K: [ 'K', 'X', 'Y' ],
-  I: [ 'I', '1', 'T', 'J' ],
-  S: [ 'S', '5' ],
-  O: [ 'O', 'D', 'Q', '0' ],
-  P: [ 'P', 'R' ],
-  Z: [ 'Z', '2' ]
-}
-
-function generateSimilarPlateNumbersRegex(plateNumber) {
+function generateSimilar(plateNumber) {
   let regex = "";
 
   for(const character of plateNumber) {
-    if(character in PLATE_SIMILARITY_DICTIONARY) regex += `[${PLATE_SIMILARITY_DICTIONARY[character].join()}]`;
+    if(character in PLATE_SIMILARITY_DICTIONARY) regex += `[${PLATE_SIMILARITY_DICTIONARY[character].join('')}]`;
     else regex += character;
   }
 
@@ -86,10 +83,11 @@ async function storeImage(plate, data) {
 }
 
 function fuzzySearch(plate) {
-  const result = didYouMean(plate, WANTED_PLATES, {
-    threshold: DID_YOU_MEAN_THRESHOLD
+  WANTED_PLATES.forEach(wanted => {
+    if (wanted.match(generateSimilar(plate)))
+      return true;
   });
-  return !result ? false : result.length > 0;
+  return false;
 }
 
 async function sendLicensePlates(message) {
