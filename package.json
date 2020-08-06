@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure/identity": "^1.0.3",
     "@azure/service-bus": "^1.1.8",
     "@azure/storage-blob": "^12.2.0-preview.1",
     "axios": "^0.19.2"

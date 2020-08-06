@@ -1,4 +1,6 @@
 const { ServiceBusClient, ReceiveMode } = require("@azure/service-bus"); 
+const { DefaultAzureCredential } = require("@azure/identity");
+const { BlobServiceClient } = require("@azure/storage-blob");
 const axios = require('axios');
 const fs = require('fs');
 
@@ -8,6 +10,7 @@ const AzureStorageBlob = require("@azure/storage-blob");
 const platesEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=ConsumeReads;SharedAccessKey=VNcJZVQAVMazTAfrssP6Irzlg/pKwbwfnOqMXqROtCQ=";
 const platesTopicName = "licenseplateread"; 
 const platesSubscriptionKey = "lljogbgtkpoozqvj"; 
+
 const wantedEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=listeneronly;SharedAccessKey=w+ifeMSBq1AQkedLCpMa8ut5c6bJzJxqHuX9Jx2XGOk=";
 const wantedTopicName = "wantedplatelistupdate"; 
 const wantedSubscriptionKey = "lljogbgtkpoozqvj"; 
@@ -53,12 +56,16 @@ async function sendLicensePlates(message) {
     return;
   }
 
+  // UPLOAD IMAGE BLOB
+  const blobURI = "";
+
   // SEND THE WANTED PLATES
   let payload = {
     LicensePlateCaptureTime : plate.LicensePlateCaptureTime,
     LicensePlate            : plate.LicensePlate,
     Latitude                : plate.Latitude,
-    Longitude               : plate.Longitude
+    Longitude               : plate.Longitude,
+    ContextImageReference   : blobURI
   }
   
   // SEND THE REQUEST
