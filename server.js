@@ -23,7 +23,7 @@ async function main() {
   const wantedSubscription = wantedClient.createSubscriptionClient(wantedTopicName, wantedSubscriptionKey);
   const wantedReceiver = wantedSubscription.createReceiver(ReceiveMode.receiveAndDelete);
 
-  WANTED_PLATES = fs.readFileSync('./data/wanted.json');
+  WANTED_PLATES = JSON.parse(fs.readFileSync('./data/wanted.json'));
 
   platesReceiver.registerMessageHandler(sendLicensePlates, onError);    
   wantedReceiver.registerMessageHandler(getWanted, onError);
@@ -72,7 +72,7 @@ async function getWanted(message) {
     }
   });
   WANTED_PLATES = plates.data
-  fs.writeFileSync('./data/wanted.json', plates.data);
+  fs.writeFileSync('./data/wanted.json', JSON.stringify(plates.data));
 }
 
 async function onError(error) {
