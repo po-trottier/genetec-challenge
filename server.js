@@ -62,7 +62,7 @@ function generateSimilar(plateNumber) {
     else regex += character;
   }
 
-  return regex;
+  return new RegExp(regex);
 }
 
 async function storeImage(plate, data) {
