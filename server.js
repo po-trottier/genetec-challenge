@@ -1,10 +1,7 @@
 const { ServiceBusClient, ReceiveMode } = require("@azure/service-bus"); 
-const { DefaultAzureCredential } = require("@azure/identity");
-const { BlobServiceClient } = require("@azure/storage-blob");
+const { BlobServiceClient, StorageSharedKeyCredential } = require("@azure/storage-blob");
 const axios = require('axios');
 const fs = require('fs');
-
-const AzureStorageBlob = require("@azure/storage-blob");
 
 // CONSTANTS
 const platesEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.net/;SharedAccessKeyName=ConsumeReads;SharedAccessKey=VNcJZVQAVMazTAfrssP6Irzlg/pKwbwfnOqMXqROtCQ=";
@@ -15,11 +12,14 @@ const wantedEndpoint = "Endpoint=sb://licenseplatepublisher.servicebus.windows.n
 const wantedTopicName = "wantedplatelistupdate"; 
 const wantedSubscriptionKey = "lljogbgtkpoozqvj"; 
 
-const STORAGE_BLOB_ACCOUNT = "contextimagereferences";
-const DEFAULT_AZURE_CREDENTIAL = new DefaultAzureCredential();
-const STORAGE_BLOB_SERVICE_CLIENT = new BlobServiceClient(
-  `https://${STORAGE_BLOB_ACCOUNT}.blob.core.windows.net`,
-  DEFAULT_AZURE_CREDENTIAL
+const account  = "contextimagereferences";
+const accountKey = "/ki/v3fcxbtN9XPzlBe3yNybCZQRONQOm7hMqLx7GKxPyRZa/t+fW+y8kjOWzIGrenDwo52eeAOdrPk+BQpv4Q==";
+const containerName = "contextimages";
+
+const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
+const blobServiceClient  = new BlobServiceClient(
+  `https://${account}.blob.core.windows.net`, 
+  sharedKeyCredential
 );
 
 // GLOBALS
@@ -37,27 +37,35 @@ async function main() {
 
   WANTED_PLATES = JSON.parse(fs.readFileSync('./data/wanted.json'));
 
+  // REGISTER LISTENERS
   platesReceiver.registerMessageHandler(sendLicensePlates, onError);    
   wantedReceiver.registerMessageHandler(getWanted, onError);
 }
 
-function storeImage(storageName, imageData) {
+async function storeImage(plate, data) {
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+ 
+  const content = data;
+  const blobName = plate;
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  const uploadBlobResponse = await blockBlobClient.upload(content, content.length);
+
+  console.log("Image Upload Successful");
   
+  return "https://contextimagereferences.blob.core.windows.net/contextimages/" + plate
 }
 
 async function sendLicensePlates(message) {
   const plate = message.body;
-
-  console.log(Object.keys(plate));
-
+  
   // FILTER FOUND PLATES WITH WANTED PLATES
-  /*if(!WANTED_PLATES.includes(plate.LicensePlate)) {
+  if(!WANTED_PLATES.includes(plate.LicensePlate)) {
     console.log(plate.LicensePlate + ' is not Wanted...');
     return;
   }
-
+  
   // UPLOAD IMAGE BLOB
-  const blobURI = "";
+  const blobURI = await storeImage(plate.LicensePlate, plate.ContextImageJpg);
 
   // SEND THE WANTED PLATES
   let payload = {
@@ -79,7 +87,7 @@ async function sendLicensePlates(message) {
       }
     }
   );
-  console.log(response.data);*/
+  console.log(response.data);
 }
 
 async function getWanted(message) {
