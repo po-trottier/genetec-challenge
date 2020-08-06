@@ -62,7 +62,7 @@ function generateSimilarPlateNumbersRegex(plateNumber) {
   let regex = "";
 
   for(const character of plateNumber) {
-    if(character in PLATE_SIMILARITY_DICTIONARY) regex += `[${PLATE_SIMILARITY_DICTIONARY[character].join('-')}]`;
+    if(character in PLATE_SIMILARITY_DICTIONARY) regex += `[${PLATE_SIMILARITY_DICTIONARY[character].join()}]`;
     else regex += character;
   }
 
