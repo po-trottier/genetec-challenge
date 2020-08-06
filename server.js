@@ -1,7 +1,6 @@
 const { ServiceBusClient, ReceiveMode } = require("@azure/service-bus"); 
 const { BlobServiceClient, StorageSharedKeyCredential } = require("@azure/storage-blob");
 const axios = require('axios');
-const didYouMean = require('didyoumean2').default;
 const fs = require('fs');
 
 // CONSTANTS
